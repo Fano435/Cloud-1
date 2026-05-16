@@ -1,0 +1,157 @@
+volumes:
+  mariadb:
+    name: mariadb
+    driver: local
+    driver_opts:
+      device: ../../data/mariadb
+      o: bind
+      type: none
+  wordpress:
+    name: wordpress
+    driver: local
+    driver_opts:
+      device: ../../data/wordpress
+      o: bind
+      type: none
+  prometheus_data: {}
+
+networks:
+  inception:
+    name: inception
+
+services:
+  nginx:
+    build: ./requirements/nginx
+    image: nginx:custom
+    container_name: nginx
+    ports: 
+      - "443:443"
+    depends_on:
+      - wordpress
+    volumes:
+      - wordpress:/var/www/wordpress
+    networks:
+      - inception
+    restart: on-failure
+
+  wordpress:
+    image: wordpress:fpm
+    container_name : wordpress
+    volumes:
+      - wordpress:/var/www/wordpress
+      - ./requirements/wordpress/wp_config.sh:/usr/local/bin/wp_config.sh
+    command: ["sh", "-c", "chmod +x /usr/local/bin/wp_config.sh && /usr/local/bin/wp_config.sh"]
+    environment:
+      MYSQL_DB: ${MDB_DB}
+      MYSQL_USER: ${MDB_USER}
+      MYSQL_PASSWORD: ${MDB_PASSWORD}
+      DOMAIN_NAME: ${DOMAIN_NAME}
+      WP_ADMIN_N: ${WP_ADMIN_N}
+      WP_ADMIN_P: ${WP_ADMIN_P}
+      WP_ADMIN_E: ${WP_ADMIN_E}
+      WP_U_NAME: ${WP_U_NAME}
+      WP_U_EMAIL: ${WP_U_EMAIL}
+      WP_U_PASS: ${WP_U_PASS}
+    networks:
+      - inception
+    restart: on-failure
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+  mariadb:
+    image: mariadb
+    container_name : mariadb
+    volumes:
+      - mariadb:/var/lib/mysql
+    environment:
+      MARIADB_DATABASE: ${MDB_DB}
+      MARIADB_USER: ${MDB_USER}
+      MARIADB_PASSWORD: ${MDB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${MDB_ROOT_PASSWORD}
+    networks:
+      - inception
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:alpine
+    container_name: redis-cache
+    command: ["redis-server", "--protected-mode", "no", "--maxmemory", "2mb", "--maxmemory-policy", "allkeys-lru"]
+    depends_on:
+      - nginx
+    networks:
+      - inception
+    restart: on-failure
+
+  adminer:
+    container_name: adminer
+    image: adminer
+    ports:
+      - "8081:8080"
+    restart: on-failure
+    depends_on:
+      - mariadb
+    networks:
+      - inception
+
+  cadvisor:
+    container_name: cadvisor
+    image: gcr.io/cadvisor/cadvisor
+    restart: on-failure
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro 
+      - /sys:/sys:ro 
+      - /var/lib/docker/:/var/lib/docker:ro
+      # - dev/disk/:/dev/disk
+    privileged: true
+    networks:
+      - inception
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: on-failure
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    privileged: true
+    ports:
+      - "9100:9100"
+    networks:
+      - inception
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    restart: on-failure
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    depends_on:
+      - cadvisor
+      - node-exporter
+    ports:
+      - "9090:9090"
+    networks:
+      - inception
+    

@@ -50,3 +50,11 @@
         name: "{{ ansible_user }}"
         groups: docker
         append: true
+
+#   - name: Build images and volumes with Docker Compose
+#     command: mkdir -p ../data/wordpress && mkdir -p ../data/mariadb && docker compose -f ./srcs/docker-compose.yml build
+
+#   - name: Launch containers with Docker Compose
+#     command: docker compose -f ./srcs/docker-compose.yml up -d
+
+# mapping VM-www
