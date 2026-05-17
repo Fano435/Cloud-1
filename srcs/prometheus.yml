@@ -6,8 +6,8 @@ global:
 remote_write:
   - url: https://prometheus-prod-65-prod-eu-west-2.grafana.net/api/prom/push
     basic_auth:
-      username_file: 
-      password_file:
+      username_file: /run/secrets/grafana_username
+      password_file: /run/secrets/grafana_password
 
 scrape_configs:
   - job_name: prometheus
