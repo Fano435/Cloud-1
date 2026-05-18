@@ -3,40 +3,40 @@ volumes:
     name: mariadb
     driver: local
     driver_opts:
-      device: ../../data/mariadb
+      device: ../data/mariadb
       o: bind
       type: none
   wordpress:
     name: wordpress
     driver: local
     driver_opts:
-      device: ../../data/wordpress
+      device: ../data/wordpress
       o: bind
       type: none
   prometheus_data: {}
 
 networks:
-  inception:
-    name: inception
+  app:
+  monitoring:
 
 services:
   nginx:
     build: ./requirements/nginx
     image: nginx:custom
     container_name: nginx
-    ports: 
+    ports:
       - "443:443"
     depends_on:
       - wordpress
     volumes:
       - wordpress:/var/www/wordpress
     networks:
-      - inception
-    restart: on-failure
+      - app
+    restart: always
 
   wordpress:
     image: wordpress:fpm
-    container_name : wordpress
+    container_name: wordpress
     volumes:
       - wordpress:/var/www/wordpress
       - ./requirements/wordpress/wp_config.sh:/usr/local/bin/wp_config.sh
@@ -53,15 +53,15 @@ services:
       WP_U_EMAIL: ${WP_U_EMAIL}
       WP_U_PASS: ${WP_U_PASS}
     networks:
-      - inception
-    restart: on-failure
+      - app
+    restart: always
     depends_on:
       mariadb:
         condition: service_healthy
 
   mariadb:
     image: mariadb
-    container_name : mariadb
+    container_name: mariadb
     volumes:
       - mariadb:/var/lib/mysql
     environment:
@@ -70,8 +70,8 @@ services:
       MARIADB_PASSWORD: ${MDB_PASSWORD}
       MARIADB_ROOT_PASSWORD: ${MDB_ROOT_PASSWORD}
     networks:
-      - inception
-    restart: on-failure
+      - app
+    restart: always
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
@@ -85,73 +85,73 @@ services:
     depends_on:
       - nginx
     networks:
-      - inception
-    restart: on-failure
+      - app
+    restart: always
 
   adminer:
     container_name: adminer
     image: adminer
     ports:
-      - "8081:8080"
-    restart: on-failure
+      - "127.0.0.1:8081:8080"
+    restart: always
     depends_on:
       - mariadb
     networks:
-      - inception
+      - app
 
   cadvisor:
     container_name: cadvisor
     image: gcr.io/cadvisor/cadvisor
-    restart: on-failure
+    restart: always
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     volumes:
       - /:/rootfs:ro
-      - /var/run:/var/run:ro 
-      - /sys:/sys:ro 
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
       # - dev/disk/:/dev/disk
     privileged: true
     networks:
-      - inception
+      - monitoring
 
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter
-    restart: on-failure
+    restart: always
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /:/rootfs:ro
     command:
-      - '--path.procfs=/host/proc'
-      - '--path.rootfs=/rootfs'
-      - '--path.sysfs=/host/sys'
-      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      - "--path.procfs=/host/proc"
+      - "--path.rootfs=/rootfs"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
     privileged: true
     ports:
-      - "9100:9100"
+      - "127.0.0.1:9100:9100"
     networks:
-      - inception
+      - monitoring
 
   prometheus:
     container_name: prometheus
     image: prom/prometheus:latest
-    restart: on-failure
+    restart: always
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./secrets:/run/secrets:ro
       - prometheus_data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--web.enable-lifecycle'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--web.enable-lifecycle"
     depends_on:
       - cadvisor
       - node-exporter
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     networks:
-      - inception
-    
+      - monitoring

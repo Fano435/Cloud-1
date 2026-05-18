@@ -1,5 +1,6 @@
 - hosts: servers
-  remote_user: root
+  remote_user: admin
+  become: true
 
   tasks:
     - name: Update and upgrade the system
@@ -31,7 +32,7 @@
         repo: >-
           deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc]
           https://download.docker.com/linux/debian
-          {{ ansible_distribution_release }} stable
+          {{ ansible_facts["distribution_release"] }} stable
         state: present
         filename: docker
 
@@ -45,16 +46,64 @@
         state: latest
         update_cache: true
 
+    - name: Enable and start Docker
+      systemd:
+        name: docker
+        enabled: true
+        state: started
+
     - name: Add user to the docker group
       user:
         name: "{{ ansible_user }}"
         groups: docker
         append: true
 
-#   - name: Build images and volumes with Docker Compose
-#     command: mkdir -p ../data/wordpress && mkdir -p ../data/mariadb && docker compose -f ./srcs/docker-compose.yml build
+    - name: Create data directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ ansible_user }}"
+      loop:
+        - /home/{{ ansible_user }}/data/wordpress
+        - /home/{{ ansible_user }}/data/mariadb
 
-#   - name: Launch containers with Docker Compose
-#     command: docker compose -f ./srcs/docker-compose.yml up -d
+    - name: Copy project files to VM
+      copy:
+        src: ./srcs/
+        dest: /home/{{ ansible_user }}/srcs/
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
 
-# mapping VM-www
+    - name: Add DOMAIN_NAME to .env file
+      lineinfile:
+        path: /home/{{ ansible_user }}/srcs/.env
+        line: "DOMAIN_NAME={{ ansible_host }}"
+        state: present
+
+    - name: Build and launch containers
+      community.docker.docker_compose_v2:
+        project_src: /home/{{ ansible_user }}/srcs/
+        state: present
+        build: always
+
+    - name: Install ufw
+      apt:
+        name: ufw
+        state: latest
+
+    - name: Disable all incoming traffic
+      community.general.ufw:
+        state: enabled
+        policy: deny
+        direction: incoming
+
+    - community.general.ufw:
+        rule: allow
+        port: ssh
+        proto: tcp
+
+    - name: Allow HTTPS
+      community.general.ufw:
+        rule: allow
+        port: 443
+        proto: tcp
