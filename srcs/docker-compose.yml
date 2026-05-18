@@ -32,7 +32,7 @@ services:
       - wordpress:/var/www/wordpress
     networks:
       - app
-    restart: on-failure
+    restart: always
 
   wordpress:
     image: wordpress:fpm
@@ -54,7 +54,7 @@ services:
       WP_U_PASS: ${WP_U_PASS}
     networks:
       - app
-    restart: on-failure
+    restart: always
     depends_on:
       mariadb:
         condition: service_healthy
@@ -71,7 +71,7 @@ services:
       MARIADB_ROOT_PASSWORD: ${MDB_ROOT_PASSWORD}
     networks:
       - app
-    restart: on-failure
+    restart: always
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
@@ -86,14 +86,14 @@ services:
       - nginx
     networks:
       - app
-    restart: on-failure
+    restart: always
 
   adminer:
     container_name: adminer
     image: adminer
     ports:
       - "127.0.0.1:8081:8080"
-    restart: on-failure
+    restart: always
     depends_on:
       - mariadb
     networks:
@@ -102,7 +102,7 @@ services:
   cadvisor:
     container_name: cadvisor
     image: gcr.io/cadvisor/cadvisor
-    restart: on-failure
+    restart: always
     ports:
       - "127.0.0.1:8080:8080"
     volumes:
@@ -118,7 +118,7 @@ services:
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter
-    restart: on-failure
+    restart: always
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -137,7 +137,7 @@ services:
   prometheus:
     container_name: prometheus
     image: prom/prometheus:latest
-    restart: on-failure
+    restart: always
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - ./secrets:/run/secrets:ro
