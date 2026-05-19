@@ -7,6 +7,9 @@
       apt:
         update_cache: true
         upgrade: dist
+        force_apt_get: true
+      environment:
+        DEBIAN_FRONTEND: noninteractive
 
     - name: Check necessary dependencies
       apt:
@@ -79,7 +82,7 @@
         path: /home/{{ ansible_user }}/srcs/.env
         line: "DOMAIN_NAME={{ ansible_host }}"
         state: present
-    
+
     - name: Add Grafana credentials to .env
       lineinfile:
         path: /home/{{ ansible_user }}/srcs/.env
