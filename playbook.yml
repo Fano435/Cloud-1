@@ -1,5 +1,5 @@
 - hosts: servers
-  remote_user: admin
+  remote_user: deploy
   become: true
 
   tasks:
@@ -79,6 +79,14 @@
         path: /home/{{ ansible_user }}/srcs/.env
         line: "DOMAIN_NAME={{ ansible_host }}"
         state: present
+    
+    - name: Add Grafana credentials to .env
+      lineinfile:
+        path: /home/{{ ansible_user }}/srcs/.env
+        line: "{{ item }}"
+      loop:
+        - "GRAFANA_USERNAME={{ lookup('env', 'GRAFANA_USERNAME') }}"
+        - "GRAFANA_PASSWORD={{ lookup('env', 'GRAFANA_PASSWORD') }}"
 
     - name: Build and launch containers
       community.docker.docker_compose_v2:

@@ -8,3 +8,5 @@ all :
 	.venv/bin/ansible-galaxy collection install community.docker
 #	commande pour lancer script ansible
 	.venv/bin/ansible-playbook -i inventory.ini playbook.yml
+
+# on aura plus besoin de ce Makefile une fois la CI/CD terminée
