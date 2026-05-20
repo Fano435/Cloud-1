@@ -1,7 +1,7 @@
-FROM nginx:latest
+FROM nginx:alpine
 
 # Installe openssl pour pouvoir générer les clés SSL
-RUN apt-get update && apt-get install -y openssl
+RUN apk add --no-cache openssl
 
 # Crée le dossier et génère le certificat SSL auto-signé
 RUN mkdir -p /etc/nginx/ssl
