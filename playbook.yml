@@ -71,18 +71,7 @@
         dest: /home/{{ ansible_user }}/srcs/.env
         content: |
           DOMAIN_NAME={{ ansible_host }}
-          MDB_DB={{ lookup('env', 'MDB_DB') }}
-          MDB_USER={{ lookup('env', 'MDB_USER') }}
-          MDB_PASSWORD={{ lookup('env', 'MDB_PASSWORD') }}
-          MDB_ROOT_PASSWORD={{ lookup('env', 'MDB_ROOT_PASSWORD') }}
-          WP_ADMIN_N={{ lookup('env', 'WP_ADMIN_N') }}
-          WP_ADMIN_P={{ lookup('env', 'WP_ADMIN_P') }}
-          WP_ADMIN_E={{ lookup('env', 'WP_ADMIN_E') }}
-          WP_U_NAME={{ lookup('env', 'WP_U_NAME') }}
-          WP_U_EMAIL={{ lookup('env', 'WP_U_EMAIL') }}
-          WP_U_PASS={{ lookup('env', 'WP_U_PASS') }}
-          GRAFANA_USERNAME={{ lookup('env', 'GRAFANA_USERNAME') }}
-          GRAFANA_PASSWORD={{ lookup('env', 'GRAFANA_PASSWORD') }}
+          "{{lookup('env', 'ENV_FILE') }}"
 
     - name: Build and launch containers
       command: docker compose -f /home/{{ ansible_user }}/srcs/docker-compose.yml up -d --build
