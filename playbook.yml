@@ -74,7 +74,10 @@
           {{ lookup('env', 'ENV_FILE') }}
 
     - name: Build and launch containers
-      command: docker compose -f /home/{{ ansible_user }}/srcs/docker-compose.yml up -d --build
+      community.docker.docker_compose_v2:
+        project_src: /home/{{ ansible_user }}/srcs/
+        state: present
+        build: policy
 
     - name: Install ufw
       apt:
