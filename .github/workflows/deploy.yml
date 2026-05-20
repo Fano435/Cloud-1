@@ -32,3 +32,5 @@ jobs:
           .venv/bin/ansible-playbook -i inventory.ini playbook.yml
         env:
           ENV_FILE: ${{ secrets.ENV_FILE }}
+          GRAFANA_USERNAME: ${{ secrets.GRAFANA_USERNAME }}
+          GRAFANA_PASSWORD: ${{ secrets.GRAFANA_PASSWORD }}

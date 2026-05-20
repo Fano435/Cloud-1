@@ -71,7 +71,7 @@
         dest: /home/{{ ansible_user }}/srcs/.env
         content: |
           DOMAIN_NAME={{ ansible_host }}
-          "{{lookup('env', 'ENV_FILE') }}"
+          {{ lookup('env', 'ENV_FILE') }}
 
     - name: Build and launch containers
       command: docker compose -f /home/{{ ansible_user }}/srcs/docker-compose.yml up -d --build
