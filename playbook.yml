@@ -73,12 +73,19 @@
           DOMAIN_NAME={{ ansible_host }}
           {{ lookup('env', 'ENV_FILE') }}
 
-    - name: Create certs folder for Traeffik
+    - name: Create Traefik certs directory
       file:
-      path: /home/{{ ansible_user }}/traefik/certs/acme.json
-      state: file
-      owner: "{{ ansible_user }}"
-      mode: 600
+        path: /home/{{ ansible_user }}/traefik/certs
+        state: directory
+        owner: "{{ ansible_user }}"
+        mode: '0755'
+
+    - name: Create Traefik acme.json file
+      file:
+        path: /home/{{ ansible_user }}/traefik/certs/acme.json
+        state: touch
+        owner: "{{ ansible_user }}"
+        mode: '0600'
 
     - name: Build and launch containers
       community.docker.docker_compose_v2:
