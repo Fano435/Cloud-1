@@ -14,6 +14,13 @@ volumes:
       o: bind
       type: none
   prometheus_data: {}
+  traefik:
+    name: traefik
+    driver: local
+    driver_opts:
+      device: ../traefik/certs
+      o: bind
+      type: none
 
 networks:
   app:
@@ -26,6 +33,35 @@ secrets:
     environment : GRAFANA_PASSWORD
 
 services:
+  traefik:
+    image: traefik:v3.3
+    container_name: traefik
+    restart: always
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/etc/traefik/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik:/etc/traefik
+    networks:
+      - app
+      - monitoring
+    environment:
+      - ACME_EMAIL=${ACME_EMAIL}
+    labels:
+      - "traefik.enable=true"
+
   nginx:
     build: ./requirements/nginx
     image: nginx:custom
@@ -38,7 +74,17 @@ services:
       - wordpress:/var/www/wordpress
     networks:
       - app
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME}
     restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nginx.rule=Host(`${DOMAIN_NAME}`)"
+      - "traefik.http.routers.nginx.entrypoints=websecure"
+      - "traefik.http.routers.nginx.tls=true"
+      - "traefik.http.routers.nginx.tls.certresolver=letsencrypt"
+      - "traefik.http.services.nginx.loadbalancer.server.port=443"
+      - "traefik.http.services.nginx.loadbalancer.server.scheme=https"
 
   wordpress:
     image: wordpress:fpm
@@ -97,20 +143,25 @@ services:
   adminer:
     container_name: adminer
     image: adminer
-    ports:
-      - "127.0.0.1:8081:8080"
     restart: always
     depends_on:
       - mariadb
     networks:
       - app
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.adminer.rule=Host(`adminer.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.adminer.entrypoints=websecure"
+      - "traefik.http.routers.adminer.tls=true"
+      - "traefik.http.services.adminer.loadbalancer.server.port=8080"
+      - "traefik.docker.network=monitoring"
 
   cadvisor:
     container_name: cadvisor
     image: gcr.io/cadvisor/cadvisor
     restart: always
-    ports:
-      - "127.0.0.1:8080:8080"
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
@@ -135,8 +186,6 @@ services:
       - "--path.sysfs=/host/sys"
       - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
     privileged: true
-    ports:
-      - "127.0.0.1:9100:9100"
     networks:
       - monitoring
 
@@ -159,7 +208,5 @@ services:
     depends_on:
       - cadvisor
       - node-exporter
-    ports:
-      - "127.0.0.1:9090:9090"
     networks:
       - monitoring
