@@ -65,10 +65,9 @@ services:
       - app
       - monitoring
     environment:
-      - ACME_EMAIL=${ACME_EMAIL}*
+      - ACME_EMAIL=${ACME_EMAIL}
     depends_on:
-      - nginx
-      - adminer
+      - prometheus
     labels:
       - "traefik.enable=true"
 
@@ -210,7 +209,7 @@ services:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
       - "--storage.tsdb.retention.time=2d"
-      - "--storage.tsdb.wal-compression=true"
+      - "--storage.tsdb.wal-compression"
       - "--web.console.libraries=/etc/prometheus/console_libraries"
       - "--web.console.templates=/etc/prometheus/consoles"
       - "--web.enable-lifecycle"
