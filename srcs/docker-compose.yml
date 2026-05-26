@@ -65,7 +65,10 @@ services:
       - app
       - monitoring
     environment:
-      - ACME_EMAIL=${ACME_EMAIL}
+      - ACME_EMAIL=${ACME_EMAIL}*
+    depends_on:
+      - nginx
+      - adminer
     labels:
       - "traefik.enable=true"
 
