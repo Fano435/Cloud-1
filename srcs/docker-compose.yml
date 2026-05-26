@@ -93,7 +93,7 @@ services:
     container_name: wordpress
     volumes:
       - wordpress:/var/www/wordpress
-      - ./requirements/wordpress/wp_config.sh:/usr/local/bin/wp_config.sh
+      - /usr/local/bin/wp_config.sh:./requirements/wordpress/wp_config.sh
     command: ["sh", "-c", "chmod +x /usr/local/bin/wp_config.sh && /usr/local/bin/wp_config.sh"]
     environment:
       MYSQL_DB: ${MDB_DB}
