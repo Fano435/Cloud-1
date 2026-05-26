@@ -126,12 +126,12 @@ services:
       MARIADB_ROOT_PASSWORD: ${MDB_ROOT_PASSWORD}
     networks:
       - app
-    restart: always
+    restart: on-failure:1
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 3
 
   redis:
     image: redis:alpine
