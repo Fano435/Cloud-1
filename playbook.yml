@@ -70,7 +70,6 @@
       copy:
         dest: /home/{{ ansible_user }}/srcs/.env
         content: |
-          DOMAIN_NAME={{ ansible_host }}
           {{ lookup('env', 'ENV_FILE') }}
 
     - name: Create Traefik certs directory
