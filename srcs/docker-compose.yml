@@ -73,16 +73,12 @@ services:
     build: ./requirements/nginx
     image: nginx:custom
     container_name: nginx
-    ports:
-      - "443:443"
     depends_on:
       - wordpress
     volumes:
       - wordpress:/var/www/wordpress
     networks:
       - app
-    environment:
-      - DOMAIN_NAME=${DOMAIN_NAME}
     restart: always
     labels:
       - "traefik.enable=true"
@@ -90,8 +86,7 @@ services:
       - "traefik.http.routers.nginx.entrypoints=websecure"
       - "traefik.http.routers.nginx.tls=true"
       - "traefik.http.routers.nginx.tls.certresolver=letsencrypt"
-      - "traefik.http.services.nginx.loadbalancer.server.port=443"
-      - "traefik.http.services.nginx.loadbalancer.server.scheme=https"
+      - "traefik.http.services.nginx.loadbalancer.server.port=80"
 
   wordpress:
     image: wordpress:fpm
@@ -121,6 +116,7 @@ services:
   mariadb:
     image: mariadb
     container_name: mariadb
+    command: --innodb-buffer-pool-size=64M --max-connections=50 --key-buffer-size=16M
     volumes:
       - mariadb:/var/lib/mysql
     environment:
@@ -209,6 +205,8 @@ services:
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=2d"
+      - "--storage.tsdb.wal-compression=true"
       - "--web.console.libraries=/etc/prometheus/console_libraries"
       - "--web.console.templates=/etc/prometheus/consoles"
       - "--web.enable-lifecycle"
