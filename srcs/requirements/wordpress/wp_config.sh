@@ -28,7 +28,4 @@ wp redis enable --allow-root
 mkdir -p /run/redis
 chmod +x /run/redis
 
-#sed -i '36 s@/run/php/php7.4-fpm.sock@9000@' /etc/php/7.4/fpm/pool.d/www.conf
-#mkdir -p /run/php
-
 php-fpm -F

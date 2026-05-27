@@ -90,7 +90,7 @@
       community.docker.docker_compose_v2:
         project_src: /home/{{ ansible_user }}/srcs/
         state: present
-        build: policy
+        build: always
 
     - name: Install ufw
       apt:
