@@ -44,6 +44,7 @@ services:
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
 
       - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
@@ -97,8 +98,6 @@ services:
     container_name: wordpress
     volumes:
       - wordpress:/var/www/wordpress
-    #   - ./requirements/wordpress/wp_config.sh:/usr/local/bin/wp_config.sh
-    # command: ["sh", "-c", "chmod +x /usr/local/bin/wp_config.sh && /usr/local/bin/wp_config.sh"]
     environment:
       MYSQL_DB: ${MDB_DB}
       MYSQL_USER: ${MDB_USER}
