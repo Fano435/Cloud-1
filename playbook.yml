@@ -86,6 +86,11 @@
         owner: "{{ ansible_user }}"
         mode: '0600'
 
+    - name: Clean up corrupted MariaDB tc.log
+      file:
+        path: /home/{{ ansible_user }}/data/mariadb/tc.log
+        state: absent
+
     - name: Build and launch containers
       community.docker.docker_compose_v2:
         project_src: /home/{{ ansible_user }}/srcs/
