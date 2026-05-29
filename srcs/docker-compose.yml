@@ -124,7 +124,7 @@ services:
   mariadb:
     image: mariadb
     container_name: mariadb
-    command: --innodb-buffer-pool-size=64M --max-connections=50 --key-buffer-size=16M
+    command: --innodb-buffer-pool-size=64M --max-connections=50 --key-buffer-size=16M --tc-heuristic-recover=commit
     volumes:
       - mariadb:/var/lib/mysql
     environment:
@@ -134,7 +134,7 @@ services:
       MARIADB_ROOT_PASSWORD: ${MDB_ROOT_PASSWORD}
     networks:
       - app
-    restart: on-failure:1
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       start_period: 2m
