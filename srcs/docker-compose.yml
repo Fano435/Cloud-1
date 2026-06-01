@@ -99,9 +99,10 @@ services:
     volumes:
       - wordpress:/var/www/wordpress
     environment:
-      MYSQL_DB: ${MDB_DB}
-      MYSQL_USER: ${MDB_USER}
-      MYSQL_PASSWORD: ${MDB_PASSWORD}
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_DB: ${MYSQL_DB}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       DOMAIN_NAME: ${DOMAIN_NAME}
       WP_ADMIN_N: ${WP_ADMIN_N}
       WP_ADMIN_P: ${WP_ADMIN_P}
@@ -121,27 +122,6 @@ services:
       retries: 10
       start_period: 3m
 
-  mariadb:
-    image: mariadb
-    container_name: mariadb
-    command: --innodb-buffer-pool-size=64M --max-connections=50 --key-buffer-size=16M
-    volumes:
-      - mariadb:/var/lib/mysql
-    environment:
-      MARIADB_DATABASE: ${MDB_DB}
-      MARIADB_USER: ${MDB_USER}
-      MARIADB_PASSWORD: ${MDB_PASSWORD}
-      MARIADB_ROOT_PASSWORD: ${MDB_ROOT_PASSWORD}
-    networks:
-      - app
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
-      start_period: 2m
-      interval: 10s
-      timeout: 5s
-      retries: 3
-
   redis:
     image: redis:alpine
     container_name: redis-cache
@@ -151,24 +131,6 @@ services:
     networks:
       - app
     restart: always
-
-  adminer:
-    container_name: adminer
-    image: adminer
-    restart: always
-    depends_on:
-      - mariadb
-    networks:
-      - app
-    environment:
-      - DOMAIN_NAME=${DOMAIN_NAME}
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.adminer.rule=Host(`adminer.${DOMAIN_NAME}`)"
-      - "traefik.http.routers.adminer.entrypoints=websecure"
-      - "traefik.http.routers.adminer.tls=true"
-      - "traefik.http.services.adminer.loadbalancer.server.port=8080"
-      - "traefik.docker.network=monitoring"
 
   cadvisor:
     container_name: cadvisor

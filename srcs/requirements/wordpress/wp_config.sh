@@ -10,7 +10,7 @@ if [ ! -f /var/www/wordpress/wp-load.php ]; then
     php -d memory_limit=512M /usr/local/bin/wp core download --locale=fr_FR --allow-root
 fi
 
-wp core config --dbhost=mariadb:3306 --dbname="$MYSQL_DB" --dbuser="$MYSQL_USER" --dbpass="$MYSQL_PASSWORD" --locale="fr_FR" --allow-root
+wp core config --dbhost="$MYSQL_HOST" --dbname="$MYSQL_DB" --dbuser="$MYSQL_USER" --dbpass="$MYSQL_PASSWORD" --locale="fr_FR" --allow-root
 
 if ! wp core is-installed --allow-root; then
 wp core install --url="https://$DOMAIN_NAME" --title=Blog --admin_user="$WP_ADMIN_N" --admin_password="$WP_ADMIN_P" --admin_email="$WP_ADMIN_E" --allow-root
