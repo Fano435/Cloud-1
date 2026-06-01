@@ -57,7 +57,6 @@
         owner: "{{ ansible_user }}"
       loop:
         - /home/{{ ansible_user }}/data/wordpress
-        - /home/{{ ansible_user }}/data/mariadb
 
     - name: Copy project files to VM
       copy:
@@ -85,11 +84,6 @@
         state: touch
         owner: "{{ ansible_user }}"
         mode: '0600'
-
-    - name: Clean up corrupted MariaDB tc.log
-      file:
-        path: /home/{{ ansible_user }}/data/mariadb/tc.log
-        state: absent
 
     - name: Build and launch containers
       community.docker.docker_compose_v2:
