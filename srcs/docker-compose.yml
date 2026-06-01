@@ -113,9 +113,6 @@ services:
     networks:
       - app
     restart: always
-    depends_on:
-      mariadb:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", "test", "-f", "/var/www/wordpress/wp-login.php"]
       interval: 10s
