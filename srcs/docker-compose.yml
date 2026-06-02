@@ -115,7 +115,8 @@ services:
       WP_U_PASS: ${WP_U_PASS}
     depends_on:
       - cloudsql-proxy
-    networks_mode: "service:cloudsql-proxy"
+    networks:
+      - app
     restart: always
     healthcheck:
       test: ["CMD", "test", "-f", "/var/www/wordpress/wp-login.php"]
