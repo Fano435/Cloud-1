@@ -88,6 +88,8 @@ services:
   cloudsql-proxy:
     image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.0
     container_name: cloudsql-proxy
+    networks:
+      - app
     command:
       - "--port=3306"
       - "firm-region-406414:us-central1:cloud1-db"
@@ -115,7 +117,6 @@ services:
       - cloudsql-proxy
     networks:
       - app
-    network_mode: "service:cloudsql-proxy"
     restart: always
     healthcheck:
       test: ["CMD", "test", "-f", "/var/www/wordpress/wp-login.php"]
