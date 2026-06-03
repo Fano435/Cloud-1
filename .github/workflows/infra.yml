@@ -23,6 +23,9 @@ jobs:
       - run: terraform init
 
       - run: terraform plan
+        env:
+          GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+          TF_VAR_ssh_public_key: ${{ secrets.SSH_GCP_KEY_PUB }}
 
       - name: Terraform Apply or Destroy
         run: terraform ${{ github.event.inputs.action }} -auto-approve
