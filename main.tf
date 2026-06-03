@@ -36,7 +36,7 @@ resource "google_compute_instance" "vm" {
   network_interface {
     network = "default"
     access_config {
-      nat_ip = google_compute_address.static[count.index].address
+      nat_ip = data.google_compute_address.static[count.index].address
     }
   }
 
