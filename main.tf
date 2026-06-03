@@ -73,7 +73,7 @@ resource "google_compute_firewall" "default" {
 # Génère l'inventaire Ansible
 resource "local_file" "inventory" {
   content = templatefile("inventory.tpl", {
-    ip   = data.google_compute_address.static[*].address
+    ips   = data.google_compute_address.static[*].address
     user = "deploy"
   })
   filename = "inventory.ini"
