@@ -2,15 +2,16 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~> 5.0"
+      version = "~> 7.0"
     }
   }
 }
 
 variable "ssh_public_key" {}
+variable "project_id" {}
 
 provider "google" {
-  project = "cloud-1"
+  project = ${var.project_id}
   region  = "us-central1"
   zone    = "us-central1-a"
 }
@@ -63,10 +64,10 @@ resource "google_compute_firewall" "default" {
 
   allow {
     protocol = "tcp"
-    ports    = ["22", "443"]
+    ports    = ["22", "443", "80]
   }
 
-  target_tags   = ["https-server"]
+  target_tags   = ["http-server", "https-server"]
   source_ranges = ["0.0.0.0/0"]
 }
 
