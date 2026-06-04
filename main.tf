@@ -6,7 +6,7 @@ terraform {
     }
   }
   backend "gcs" {
-    bucket = "cloud-1-terraform-state"
+    bucket = "cloud1-terraform-state"
     prefix = "state"
   }
 }
