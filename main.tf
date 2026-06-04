@@ -64,13 +64,6 @@ resource "google_compute_instance" "vm" {
   }
 }
 
-resource "google_storage_bucket" "terraform_state_bucket" {
-  name        = terraform-bucket-state
-  location    = "us-central1"
-  uniform_bucket_level_access = true
-  force_destroy = true
-}
-
 resource "local_file" "inventory" {
   content = templatefile("inventory.tpl", {
     ips   = data.google_compute_address.static[*].address
