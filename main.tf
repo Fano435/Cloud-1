@@ -7,11 +7,16 @@ terraform {
   }
 }
 
-variable "ssh_public_key" {}
-variable "project_id" {}
+variable "ssh_public_key" {
+  sensitive = true
+}
+
+variable "project_id" {
+  type = string
+}
 
 provider "google" {
-  project = ${var.project_id}
+  project = var.project_id
   region  = "us-central1"
   zone    = "us-central1-a"
 }
@@ -38,10 +43,10 @@ resource "google_compute_instance" "vm" {
     network = "default"
     access_config {
       nat_ip = data.google_compute_address.static[count.index].address
+      network_tier = "PREMIUM"
     }
   }
 
-  # Accès Cloud SQL Proxy
   service_account {
     scopes = [
       "https://www.googleapis.com/auth/cloud-platform",
@@ -49,7 +54,6 @@ resource "google_compute_instance" "vm" {
     ]
   }
 
-  # Clé SSH
   metadata = {
     ssh-keys = "deploy:${var.ssh_public_key}"
   }
@@ -57,21 +61,6 @@ resource "google_compute_instance" "vm" {
   tags = ["http-server", "https-server"]
 }
 
-# Firewall — same config que ton ufw
-resource "google_compute_firewall" "default" {
-  name    = "wordpress-firewall"
-  network = "default"
-
-  allow {
-    protocol = "tcp"
-    ports    = ["22", "443", "80]
-  }
-
-  target_tags   = ["http-server", "https-server"]
-  source_ranges = ["0.0.0.0/0"]
-}
-
-# Génère l'inventaire Ansible
 resource "local_file" "inventory" {
   content = templatefile("inventory.tpl", {
     ips   = data.google_compute_address.static[*].address

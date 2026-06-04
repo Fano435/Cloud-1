@@ -34,3 +34,16 @@ jobs:
           GOOGLE_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
           TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
           TF_VAR_ssh_public_key: ${{ secrets.SSH_GCP_KEY_PUB }}
+
+      - name: Commit and push inventory
+        run: |
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add inventory.ini
+          git commit -m "Update inventory after terraform apply"
+        
+      - name: Push inventory
+        uses: ad-m/github-push-action@master
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
