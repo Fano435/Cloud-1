@@ -5,6 +5,10 @@ terraform {
       version = "~> 7.0"
     }
   }
+  backend "gcs" {
+    bucket = "cloud-1-terraform-state"
+    prefix = "state"
+  }
 }
 
 variable "ssh_public_key" {
@@ -31,6 +35,7 @@ resource "google_compute_instance" "vm" {
   name         = "wordpress-prod-${count.index}"
   machine_type = "e2-small"
   zone         = "us-central1-a"
+  tags = ["http-server", "https-server"]
 
   boot_disk {
     initialize_params {
@@ -57,8 +62,13 @@ resource "google_compute_instance" "vm" {
   metadata = {
     ssh-keys = "deploy:${var.ssh_public_key}"
   }
+}
 
-  tags = ["http-server", "https-server"]
+resource "google_storage_bucket" "terraform_state_bucket" {
+  name        = terraform-bucket-state
+  location    = "us-central1"
+  uniform_bucket_level_access = true
+  force_destroy = true
 }
 
 resource "local_file" "inventory" {
