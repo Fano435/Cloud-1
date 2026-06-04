@@ -1,6 +1,6 @@
 [servers]
-%{ for ip in ips ~}
-vm-${ip} ansible_host=${ip}
+%{ for i, ip in ips ~}
+wordpress-prod-${i} ansible_host=${ip}
 %{ endfor ~}
 
 [servers:vars]
